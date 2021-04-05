@@ -16,7 +16,7 @@ python mockHL7server.py
 
 This will start the mock server in port `13370`.
 
-## Runnin locust
+## Running locust
 
 Also within the project you can find a `locustfile.py`. This file contains the proof of concept.
 

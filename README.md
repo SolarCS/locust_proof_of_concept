@@ -28,7 +28,7 @@ In order to run locust, standing on the project's root folder, you should run th
 locust
 ```
 
-_Note that you need to have pythong and locust installed in your computer first._
+_Note that you need to have [python and locust installed](https://docs.locust.io/en/stable/installation.html) in your computer first._
 
 This will start a server in `localhost:8089` that will allow you to start sarming the target hl7 server.
 

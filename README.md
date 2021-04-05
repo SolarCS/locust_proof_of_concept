@@ -1,6 +1,6 @@
 # HL7/MLLP load testing with locust
 
-This project aims to show a small proof of concept on how to load test an HL7 server using [locust](https://locust.io/).
+This project aims to showcase a small proof of concept on how to load test an HL7 server using [locust](https://locust.io/).
 
 ## HL7 mock server
 

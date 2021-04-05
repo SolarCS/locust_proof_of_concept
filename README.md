@@ -30,7 +30,7 @@ locust
 
 _Note that you need to have [python and locust installed](https://docs.locust.io/en/stable/installation.html) in your computer first._
 
-This will start a server in `localhost:8089` that will allow you to start sarming the target hl7 server.
+This will start a server in `localhost:8089` that will allow you to load test the target hl7 server.
 
 After some time, you should get some stats like this one:
 

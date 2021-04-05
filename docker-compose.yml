@@ -3,14 +3,12 @@ version: '3'
 services:
   master:
     image: locustio/locust
-    ports:
-     - "8089:8089"
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --master --headless -u 1000 -r 100 --run-time 5m --stop-timeout 99 --expect-workers 4 -H 192.168.198.2:2575
+    command: -f /mnt/locust/locustfile.py --config /mnt/locust/master.conf
 
   worker:
     image: locustio/locust
     volumes:
       - ./:/mnt/locust
-    command: -f /mnt/locust/locustfile.py --worker --master-host master
+    command: -f /mnt/locust/locustfile.py --config /mnt/locust/worker.conf

@@ -16,7 +16,7 @@ python mockHL7server.py
 
 This will start the mock server in port `13370`.
 
-## Running locust
+## Running locally
 
 Also within the project you can find a `locustfile.py`. This file contains the proof of concept.
 
@@ -35,3 +35,17 @@ This will start a server in `localhost:8089` that will allow you to load test th
 After some time, you should get some stats like this one:
 
 ![image](https://user-images.githubusercontent.com/3678598/113576098-4d386600-95f5-11eb-839c-145416d1e66a.png)
+
+## Distributed load testing using docker
+
+The repo already contains a `docker-compose.yml` file with the needed instructions to run the tests in a containerized environment.
+
+In order to do so, you need to run the following command:
+
+```bash
+docker-compose up --scale worker=4
+```
+
+This will start the master, spawn 4 workers and start the distributed load testing
+
+Check the `master.conf` file in order to change any of the test case parameters.

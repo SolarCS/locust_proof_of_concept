@@ -73,8 +73,8 @@ class TestUser(TcpUser):
 
     min_wait = 100
     max_wait = 1000
-    host = "127.0.0.1"
-    port = 13370
+    host = "192.168.198.2"
+    port = 2575
 
     hl7_message = """MSH||EPIC|UCSF|CIPHERHEALTH|UCSF|20210312165235||ADT^A01|87326|P|2.3
 EVN||20210227031434

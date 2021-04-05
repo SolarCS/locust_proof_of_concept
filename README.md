@@ -6,7 +6,7 @@ This project aims to showcase a small proof of concept on how to load test an HL
 
 In order to test this on your local, there's a dummy tcp server within the repo that is mocking an HL7 server.
 
-Note that it will always answer with the same message. That's why is dummy.
+Note that it will always answer with the same message. That's why it's dummy.
 
 In order to start the server, run the following command:
 

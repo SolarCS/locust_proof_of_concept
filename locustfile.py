@@ -12,61 +12,23 @@ from locust import User, TaskSet, events, task
 
 class MllpClient(socket.socket):
 
-    _locust_environment = None
-
     # locust tcp client
     # author: Max.Bai@2017
     def __init__(self, af_inet, socket_type):
         super(MllpClient, self).__init__(af_inet, socket_type)
 
     def connect(self, addr):
-        start_time = time.time()
-        try:
-            super(MllpClient, self).connect(addr)
-        except Exception as e:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0, exception=e)
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0)
+        return super(MllpClient, self).connect(addr)
 
     def send(self, msg):
-        start_time = time.time()
-        msg = b"\x0b" + msg.encode('ascii') + b"\x1c\x0d"
-        try:
-            super(MllpClient, self).send(msg)
-        except Exception as e:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0, exception=e)
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0)
+        msg = b"\x0b" + msg.replace("\n", "\r").encode('ascii') + b"\x1c\x0d"
+        return super(MllpClient, self).send(msg)
 
     def recv(self, bufsize):
-        recv_data = ''
-        start_time = time.time()
-        try:
-            recv_data = super(MllpClient, self).recv(bufsize).decode()
-            if 'ACK' not in recv_data:
-                raise Exception(f'ACK not found in message: {recv_data}')
-        except Exception as e:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0, exception=e)
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0)
-        return recv_data
+        return super(MllpClient, self).recv(bufsize).decode()
 
     def close(self):
-        start_time = time.time()
-        try:
-            super(MllpClient, self).close()
-        except Exception as e:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="close", response_time=total_time, response_length=0, exception=e)
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="close", response_time=total_time, response_length=0)
+        return super(MllpClient, self).close()
 
 
 class TcpUser(User):
@@ -87,7 +49,6 @@ class TcpUser(User):
 
     def new_connection(self):
         self.client = MllpClient(socket.AF_INET, socket.SOCK_STREAM)
-        self.client._locust_environment = self.environment
         ADDR = (self.host, self.port)
         self.client.connect(ADDR)
         self.message_count = 0
@@ -106,14 +67,22 @@ PD1||||21194^SMITH^JOHN^L
 PV1||I|35NU^3418-01^^UCSF|EL|||67397^DAVOLIO^NANCY|||SUR||||1|||67397^DAVOLIO^NANCY||193167550|||||||||||||||||||||||||20201229084300
 DG1||||Description0
 DG1||||Description1
-IN1||||UNITED MEDICAL RESOURCES INC""".replace("\n", "\r")
+IN1||||UNITED MEDICAL RESOURCES INC"""
 
     @task
-    def send_message1(self):
+    def send_message(self):
         if self.message_count < 90:
-            self.client.send(self.hl7_message)
-            data = self.client.recv(2048)
-            self.message_count += 1
+            start_time = time.time()
+            try:
+                self.client.send(self.hl7_message)
+                data = self.client.recv(2048)
+                if 'ACK' not in data:
+                    raise Exception(f'ACK not found in message: {recv_data}')
+                total_time = int((time.time() - start_time) * 1000)
+                self.environment.events.request_success.fire(request_type="test_user", name="send_message", response_time=total_time, response_length=0)
+            except Exception as e:
+                total_time = int((time.time() - start_time) * 1000)
+                self.environment.events.request_failure.fire(request_type="test_user", name="send_message", response_time=total_time, response_length=0, exception=e)
         else:
             # Reset connection
             self.client.close()

@@ -78,6 +78,7 @@ IN1||||UNITED MEDICAL RESOURCES INC"""
                 data = self.client.recv(2048)
                 if 'ACK' not in data:
                     raise Exception(f'ACK not found in message: {recv_data}')
+                self.message_count += 1
                 total_time = int((time.time() - start_time) * 1000)
                 self.environment.events.request_success.fire(request_type="test_user", name="send_message", response_time=total_time, response_length=0)
             except Exception as e:

@@ -28,7 +28,7 @@ def tcplink(sock, addr):
 
 def main():
     host = ''
-    port = 13370
+    port = 2575
 
     ADDR = (host,port)
 

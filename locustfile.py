@@ -11,6 +11,9 @@ from locust import User, TaskSet, events, task
 # date: 2017-04
 
 class MllpClient(socket.socket):
+
+    _locust_environment = None
+
     # locust tcp client
     # author: Max.Bai@2017
     def __init__(self, af_inet, socket_type):
@@ -22,10 +25,10 @@ class MllpClient(socket.socket):
             super(MllpClient, self).connect(addr)
         except Exception as e:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0, exception=e)
+            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0, exception=e)
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0)
+            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="connect", response_time=total_time, response_length=0)
 
     def send(self, msg):
         start_time = time.time()
@@ -34,10 +37,10 @@ class MllpClient(socket.socket):
             super(MllpClient, self).send(msg)
         except Exception as e:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0, exception=e)
+            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0, exception=e)
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0)
+            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="send", response_time=total_time, response_length=0)
 
     def recv(self, bufsize):
         recv_data = ''
@@ -48,11 +51,23 @@ class MllpClient(socket.socket):
                 raise Exception(f'ACK not found in message: {recv_data}')
         except Exception as e:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0, exception=e)
+            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0, exception=e)
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0)
+            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="recv", response_time=total_time, response_length=0)
         return recv_data
+
+    def close(self):
+        start_time = time.time()
+        try:
+            super(MllpClient, self).close()
+        except Exception as e:
+            total_time = int((time.time() - start_time) * 1000)
+            self._locust_environment.events.request_failure.fire(request_type="tcpsocket", name="close", response_time=total_time, response_length=0, exception=e)
+        else:
+            total_time = int((time.time() - start_time) * 1000)
+            self._locust_environment.events.request_success.fire(request_type="tcpsocket", name="close", response_time=total_time, response_length=0)
+
 
 class TcpUser(User):
     """
@@ -62,12 +77,20 @@ class TcpUser(User):
     """
 
     abstract = True
+    user_id_gen = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.new_connection()
+        TcpUser.user_id_gen += 1
+        self.user_id = TcpUser.user_id_gen
+
+    def new_connection(self):
         self.client = MllpClient(socket.AF_INET, socket.SOCK_STREAM)
+        self.client._locust_environment = self.environment
         ADDR = (self.host, self.port)
         self.client.connect(ADDR)
+        self.message_count = 0
 
 class TestUser(TcpUser):
 
@@ -87,9 +110,15 @@ IN1||||UNITED MEDICAL RESOURCES INC""".replace("\n", "\r")
 
     @task
     def send_message1(self):
-        self.client.send(self.hl7_message)
-        data = self.client.recv(2048)
-        print(data)
+        if self.message_count < 90:
+            self.client.send(self.hl7_message)
+            data = self.client.recv(2048)
+            self.message_count += 1
+        else:
+            # Reset connection
+            self.client.close()
+            time.sleep(1) # sleep 1 second
+            self.new_connection()
 
 # Exit code should depend on some pre established performance baseline
 @events.quitting.add_listener

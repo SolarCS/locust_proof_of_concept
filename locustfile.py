@@ -21,7 +21,6 @@ class MllpClient(socket.socket):
         return super(MllpClient, self).connect(addr)
 
     def send(self, msg):
-        msg = b"\x0b" + msg.replace("\n", "\r").encode('ascii') + b"\x1c\x0d"
         return super(MllpClient, self).send(msg)
 
     def recv(self, bufsize):
@@ -72,10 +71,10 @@ IN1||||UNITED MEDICAL RESOURCES INC"""
     @task
     def send_message(self):
         if self.message_count < 90:
-            print(f'{self.user_id}: port {self.client.getsockname()[1]}')
+            message = b"\x0b" + self.hl7_message.replace('Elfo^Oscuro', f'Elfo^Oscuro^{self.user_id}').replace("\n", "\r").encode('ascii') + b"\x1c\x0d"
             start_time = time.time()
             try:
-                self.client.send(self.hl7_message)
+                self.client.send(message)
                 data = self.client.recv(2048)
                 if 'ACK' not in data:
                     raise Exception(f'ACK not found in message: {data}')

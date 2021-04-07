@@ -72,6 +72,7 @@ IN1||||UNITED MEDICAL RESOURCES INC"""
     @task
     def send_message(self):
         if self.message_count < 90:
+            print(f'{self.user_id}: port {self.client.getsockname()[1]}')
             start_time = time.time()
             try:
                 self.client.send(self.hl7_message)

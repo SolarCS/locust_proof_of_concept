@@ -70,7 +70,7 @@ IN1||||UNITED MEDICAL RESOURCES INC"""
 
     @task
     def send_message(self):
-        if self.message_count < 90:
+        if self.message_count < 25:
             message = b"\x0b" + self.hl7_message.replace('Elfo^Oscuro', f'Elfo^Oscuro^{self.user_id}').replace("\n", "\r").encode('ascii') + b"\x1c\x0d"
             start_time = time.time()
             try:
@@ -84,11 +84,15 @@ IN1||||UNITED MEDICAL RESOURCES INC"""
             except Exception as e:
                 total_time = int((time.time() - start_time) * 1000)
                 self.environment.events.request_failure.fire(request_type="test_user", name="send_message", response_time=total_time, response_length=0, exception=e)
+                # Reset connection if an exception occurred
+                self.reset_connection()
         else:
-            # Reset connection
-            self.client.close()
-            time.sleep(1) # sleep 1 second
-            self.new_connection()
+            self.reset_connection()
+
+    def reset_connection(self):
+        self.client.close()
+        time.sleep(1) # sleep 1 second
+        self.new_connection()
 
 # Exit code should depend on some pre established performance baseline
 @events.quitting.add_listener
